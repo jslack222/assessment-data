@@ -22,35 +22,36 @@ module.exports = {
   },
   
     createCity: (req, res) => {
-        let { name, countryId, rating } = req.body
+        const { name, rating, countryId } = req.body
         sequelize
           .query(
             `
                 INSERT INTO cities (
-                    name VARCHAR,
-                    rating INTEGER, 
-                    country_id INTEGER)
+                    name,
+                    rating, 
+                    country_id)
                     VALUES (
                         ${name}, 
-                        ${countryId},
-                        ${rating}
-                    );
-                   `)
-                 .then((dbRes) => res.status(200).send(dbRes[0]))
-                 .then((dbRes) => console.log(dbRes))
-                 .catch((err) => console.log("Create Cities function not working", err));
+                        ${rating},
+                        ${countryId}
+                    )
+                   `
+          )
+          .then((dbRes) => res.status(200).send(dbRes[0]))
+          .then((dbRes) => console.log(dbRes))
+          .catch((err) =>
+            console.log("Create Cities function not working", err)
+          );
   },
     
     getCities: (req, res) => {
         sequelize
           .query(
             `
-                SELECT a.city_id, a.name, a.rating, country_id
-                FROM cities a  
-                SELECT country_id, name 
-                FROM countries u 
-                JOIN cities a, countries u 
-                WHERE a.country_id = u.country_id
+                SELECT city_id, c.name AS city, rating, country_id, co.name
+                AS country FROM cities c
+                JOIN countries co
+                ON c.country_id = co.country_id;
             
             `
           )
@@ -60,12 +61,13 @@ module.exports = {
     },
 
     deleteCities: (req, res) => {
+        const { id } = req.params;
         sequelize
           .query(
             `
+            DELETE FROM cities
+            WHERE city_id = ${+id};
 
-
-        
             `
           )
           .then((dbRes) => res.status(200).send(dbRes[0]))
@@ -88,7 +90,7 @@ module.exports = {
                 city_id SERIAL PRIMARY KEY, 
                 name VARCHAR, 
                 rating INTEGER, 
-                country_id INTEGER REFERENCES countries(country_id)
+                country_id INTEGER NOT NULL REFERENCES countries(country_id)
             );
 
             insert into countries (name)
